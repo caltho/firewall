@@ -12,3 +12,92 @@
   --color-fire-800: #9a3412;
   --color-fire-900: #7c2d12;
 }
+
+/* Print-friendly styles */
+@media print {
+  /* Hide navigation, header, footer, and interactive elements */
+  header,
+  footer,
+  nav,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset page layout */
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove max-width constraint so content fills the page */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure the grid stacks vertically for print */
+  .lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lg\:col-span-2 {
+    grid-column: span 1 !important;
+  }
+
+  /* Remove shadows and adjust borders for print */
+  .shadow-sm,
+  .shadow-md {
+    box-shadow: none !important;
+  }
+
+  /* Expand the calculations detail by default in print */
+  details[open] summary ~ * {
+    display: block;
+  }
+
+  details {
+    break-inside: avoid;
+  }
+
+  /* Keep cards together */
+  .rounded-xl,
+  .rounded-lg {
+    break-inside: avoid;
+  }
+
+  /* Ensure badges print with colour */
+  .bg-emerald-100,
+  .bg-red-100,
+  .bg-emerald-50\/50,
+  .bg-red-50\/50 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Add print header with app name */
+  .min-h-screen::before {
+    content: "FireWall — NCC Compliance Assessment";
+    display: block;
+    font-size: 10pt;
+    color: #94a3b8;
+    text-align: center;
+    padding: 8pt 0;
+    border-bottom: 1pt solid #e2e8f0;
+    margin-bottom: 12pt;
+  }
+
+  /* Add print footer with disclaimer */
+  .min-h-screen::after {
+    content: "This tool is for preliminary assessment only. It does not replace professional fire safety engineering judgment or formal NCC compliance checking by a qualified practitioner.";
+    display: block;
+    font-size: 8pt;
+    color: #94a3b8;
+    text-align: center;
+    padding: 12pt 0 0;
+    border-top: 1pt solid #e2e8f0;
+    margin-top: 24pt;
+  }
+}

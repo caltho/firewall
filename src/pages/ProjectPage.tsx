@@ -6,9 +6,11 @@ import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { WallForm } from '../components/wall/WallForm';
 import { getBuildingClassInfo } from '../constants/buildingClasses';
+import { getConstructionType } from '../constants/constructionTypes';
 import { assessWall } from '../engine/complianceEngine';
 import { generateId } from '../utils/ids';
 import { formatFRL, formatArea, formatDistance } from '../utils/formatters';
+import { isClass1, isClass10 } from '../types/ncc';
 import type { BoundaryType } from '../types/ncc';
 import type { WallMaterial } from '../types/project';
 
@@ -51,6 +53,9 @@ export function ProjectPage() {
   }
 
   const classInfo = getBuildingClassInfo(project.buildingClass);
+  const constructionType = isClass1(project.buildingClass) || isClass10(project.buildingClass)
+    ? null
+    : getConstructionType(project.buildingClass, project.riseInStoreys);
 
   function handleAddWall(data: {
     name: string;
@@ -98,20 +103,54 @@ export function ProjectPage() {
         <span className="text-slate-900">{project.name}</span>
       </nav>
 
-      {/* Project header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
-          {project.address && <p className="text-sm text-slate-500 mt-1">{project.address}</p>}
-          <div className="flex items-center gap-3 mt-2">
-            <Badge variant="info">{classInfo?.label ?? `Class ${project.buildingClass}`}</Badge>
-            <span className="text-sm text-slate-600">{project.riseInStoreys} storey{project.riseInStoreys !== 1 ? 's' : ''}</span>
-            {project.hasSprinklers && <Badge variant="compliant">Sprinklered</Badge>}
+      {/* Project Details Banner */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+        <div className="px-6 py-5">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
+              {project.address && <p className="text-sm text-slate-500 mt-1">{project.address}</p>}
+            </div>
+            <div className="flex gap-2 print:hidden">
+              <Button variant="secondary" onClick={handleDeleteProject}>Delete Project</Button>
+              <Button onClick={() => setShowWallForm(true)}>Add Wall</Button>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={handleDeleteProject}>Delete Project</Button>
-          <Button onClick={() => setShowWallForm(true)}>Add Wall</Button>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+            <div>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Building Class</p>
+              <p className="text-sm font-semibold text-slate-900 mt-1">
+                {classInfo?.label ?? `Class ${project.buildingClass}`}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">{classInfo?.description}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Rise in Storeys</p>
+              <p className="text-sm font-semibold text-slate-900 mt-1">
+                {project.riseInStoreys} storey{project.riseInStoreys !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Construction Type</p>
+              <p className="text-sm font-semibold text-slate-900 mt-1">
+                {constructionType ? `Type ${constructionType}` : isClass1(project.buildingClass) ? 'N/A (Class 1)' : 'N/A'}
+              </p>
+              {constructionType && (
+                <p className="text-xs text-slate-500 mt-0.5">Per NCC Table C2D2</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Fire Sprinklers</p>
+              <p className="text-sm mt-1">
+                {project.hasSprinklers ? (
+                  <Badge variant="compliant">Sprinklered</Badge>
+                ) : (
+                  <span className="font-semibold text-slate-900">No</span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -133,16 +172,14 @@ export function ProjectPage() {
             return (
               <div
                 key={wall.id}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                onClick={() => navigate(`/project/${project.id}/wall/${wall.id}`)}
+                className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="px-6 py-4 flex items-center justify-between">
                   <div>
-                    <Link
-                      to={`/project/${project.id}/wall/${wall.id}`}
-                      className="text-lg font-semibold text-slate-900 hover:text-fire-600 transition-colors"
-                    >
+                    <span className="text-lg font-semibold text-slate-900">
                       {wall.name}
-                    </Link>
+                    </span>
                     <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
                       <span>{formatArea(wall.height * wall.width)}</span>
                       <span>{formatDistance(wall.distanceToBoundary)} to boundary</span>
@@ -162,7 +199,7 @@ export function ProjectPage() {
                         )}
                       </div>
                     )}
-                    <Button variant="danger" size="sm" onClick={() => handleDeleteWall(wall.id)}>
+                    <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteWall(wall.id); }}>
                       Delete
                     </Button>
                   </div>
