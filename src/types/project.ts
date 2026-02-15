@@ -45,6 +45,9 @@ export interface Opening {
   name: string;
   width: number;
   height: number;
+  color?: string;  // custom colour for diagram display (hex string)
+  x?: number;  // horizontal position from wall's left edge (meters)
+  y?: number;  // vertical position from wall's top edge (meters)
   details: WindowDetails | DoorDetails | GeneralOpeningDetails;
 }
 

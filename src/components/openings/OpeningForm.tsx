@@ -12,6 +12,7 @@ interface OpeningFormProps {
   onClose: () => void;
   onSubmit: (data: Omit<Opening, 'id' | 'wallId'>) => void;
   initialData?: Opening;
+  defaultPosition?: { x: number; y: number };
 }
 
 const openingTypeOptions = [
@@ -43,11 +44,12 @@ const roomTypeOptions = [
   { value: 'other', label: 'Other non-habitable' },
 ];
 
-export function OpeningForm({ isOpen, onClose, onSubmit, initialData }: OpeningFormProps) {
+export function OpeningForm({ isOpen, onClose, onSubmit, initialData, defaultPosition }: OpeningFormProps) {
   const [name, setName] = useState(initialData?.name ?? '');
   const [type, setType] = useState<OpeningType>(initialData?.type ?? OpeningType.Window);
   const [width, setWidth] = useState(initialData?.width ?? 1.2);
   const [height, setHeight] = useState(initialData?.height ?? 1.5);
+  const [color, setColor] = useState(initialData?.color ?? '#3b82f6');
 
   // Window fields
   const initWindow = initialData?.details.type === 'window' ? initialData.details : null;
@@ -121,6 +123,9 @@ export function OpeningForm({ isOpen, onClose, onSubmit, initialData }: OpeningF
       name: name.trim(),
       width,
       height,
+      color,
+      x: initialData?.x ?? defaultPosition?.x,
+      y: initialData?.y ?? defaultPosition?.y,
       details,
     });
     onClose();
@@ -171,6 +176,20 @@ export function OpeningForm({ isOpen, onClose, onSubmit, initialData }: OpeningF
             onChange={e => setHeight(parseFloat(e.target.value) || 0)}
             error={errors.height}
           />
+        </div>
+
+        {/* Colour picker */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Diagram Colour</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={color}
+              onChange={e => setColor(e.target.value)}
+              className="w-10 h-10 rounded border border-slate-300 cursor-pointer p-0.5"
+            />
+            <span className="text-sm text-slate-500">{color}</span>
+          </div>
         </div>
 
         {/* Type-specific fields */}

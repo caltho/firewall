@@ -77,6 +77,15 @@
     print-color-adjust: exact;
   }
 
+  /* Ensure SVG diagram prints with colours */
+  svg rect,
+  svg text,
+  svg line,
+  svg path {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   /* Add print header with app name */
   .min-h-screen::before {
     content: "FireWall — NCC Compliance Assessment";

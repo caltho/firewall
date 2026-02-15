@@ -8,9 +8,11 @@ import { Input } from '../components/common/Input';
 import { Select } from '../components/common/Select';
 import { Checkbox } from '../components/common/Checkbox';
 import { OpeningForm } from '../components/openings/OpeningForm';
+import { WallDiagram } from '../components/wall/WallDiagram';
 import { assessWall } from '../engine/complianceEngine';
 import { generateId } from '../utils/ids';
 import { formatFRL, formatArea, formatDistance, formatPercentage } from '../utils/formatters';
+import { resolveOpeningPositions } from '../utils/wallGeometry';
 import { BoundaryType, isClass1, isClass10 } from '../types/ncc';
 import { WallMaterial, type Opening } from '../types/project';
 import { getBuildingClassInfo } from '../constants/buildingClasses';
@@ -37,6 +39,7 @@ export function WallAssessmentPage() {
   const { state, dispatch } = useAppContext();
   const [showOpeningForm, setShowOpeningForm] = useState(false);
   const [editingOpening, setEditingOpening] = useState<Opening | null>(null);
+  const [selectedOpeningId, setSelectedOpeningId] = useState<string | null>(null);
 
   const project = projectId ? state.projects[projectId] : undefined;
   const wall = wallId ? state.walls[wallId] : undefined;
@@ -50,6 +53,12 @@ export function WallAssessmentPage() {
     if (!project || !wall) return null;
     return assessWall(project, wall, openings);
   }, [project, wall, openings]);
+
+  // Compute diagram positions: equally spaced horizontally, doors at bottom, rest centred
+  const positionedOpenings = useMemo(() => {
+    if (!wall) return [];
+    return resolveOpeningPositions(openings, wall.width, wall.height);
+  }, [openings, wall]);
 
   if (!project || !wall) {
     return (
@@ -94,6 +103,12 @@ export function WallAssessmentPage() {
 
   function handleDeleteOpening(openingId: string) {
     dispatch({ type: 'DELETE_OPENING', payload: { openingId, wallId: wall!.id } });
+  }
+
+  function handleOpeningClick(openingId: string) {
+    setSelectedOpeningId(openingId);
+    const opening = state.openings[openingId];
+    if (opening) setEditingOpening(opening);
   }
 
   const classInfo = getBuildingClassInfo(project.buildingClass);
@@ -294,6 +309,26 @@ export function WallAssessmentPage() {
                 })}
               </div>
             )}
+          </Card>
+
+          {/* Wall Elevation Diagram */}
+          <Card
+            title="Wall Elevation"
+            actions={
+              <span className="text-xs text-slate-400">
+                Click wall to add &middot; Click opening to edit
+              </span>
+            }
+          >
+            <WallDiagram
+              wallWidth={wall.width}
+              wallHeight={wall.height}
+              openings={positionedOpenings}
+              openingResults={complianceResult?.openingResults}
+              selectedOpeningId={selectedOpeningId}
+              onWallClick={() => setShowOpeningForm(true)}
+              onOpeningClick={handleOpeningClick}
+            />
           </Card>
         </div>
 
@@ -606,7 +641,7 @@ export function WallAssessmentPage() {
       {editingOpening && (
         <OpeningForm
           isOpen={true}
-          onClose={() => setEditingOpening(null)}
+          onClose={() => { setEditingOpening(null); setSelectedOpeningId(null); }}
           onSubmit={handleUpdateOpening}
           initialData={editingOpening}
         />
